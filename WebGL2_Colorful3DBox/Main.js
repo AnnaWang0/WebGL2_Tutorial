@@ -40,22 +40,83 @@ function main(){
 
     // const pointSizeData = 110.0;
 
+    // const positionData = [
+    //     0, .3, 0,        //V1.position
+    //     -.3, -.3, 0,      //V2.position
+    //     .3, -.3, 0,       //V3.position
+    // ];
+
     const positionData = [
-        0, .3, 0,        //V1.position
-        -.3, -.3, 0,      //V2.position
-        .3, -.3, 0,       //V3.position
+        // Front
+        0.5, 0.5, 0.5,
+        0.5, -.5, 0.5,
+        -.5, 0.5, 0.5,
+        -.5, 0.5, 0.5,
+        0.5, -.5, 0.5,
+        -.5, -.5, 0.5,
+
+        // Left
+        -.5, 0.5, 0.5,
+        -.5, -.5, 0.5,
+        -.5, 0.5, -.5,
+        -.5, 0.5, -.5,
+        -.5, -.5, 0.5,
+        -.5, -.5, -.5,
+
+        // Back
+        -.5, 0.5, -.5,
+        -.5, -.5, -.5,
+        0.5, 0.5, -.5,
+        0.5, 0.5, -.5,
+        -.5, -.5, -.5,
+        0.5, -.5, -.5,
+
+        // Right
+        0.5, 0.5, -.5,
+        0.5, -.5, -.5,
+        0.5, 0.5, 0.5,
+        0.5, 0.5, 0.5,
+        0.5, -.5, 0.5,
+        0.5, -.5, -.5,
+
+        // Top
+        0.5, 0.5, 0.5,
+        0.5, 0.5, -.5,
+        -.5, 0.5, 0.5,
+        -.5, 0.5, 0.5,
+        0.5, 0.5, -.5,
+        -.5, 0.5, -.5,
+
+        // Bottom
+        0.5, -.5, 0.5,
+        0.5, -.5, -.5,
+        -.5, -.5, 0.5,
+        -.5, -.5, 0.5,
+        0.5, -.5, -.5,
+        -.5, -.5, -.5,
     ];
 
-    const colorsData = [
-        Math.random(), Math.random(), Math.random(),        //V1.color
-        Math.random(), Math.random(), Math.random(),       //V2.color
-        Math.random(), Math.random(), Math.random(),        //V3.color
-    ]
+    // const colorsData = [
+    //     Math.random(), Math.random(), Math.random(),        //V1.color
+    //     Math.random(), Math.random(), Math.random(),       //V2.color
+    //     Math.random(), Math.random(), Math.random(),        //V3.color
+    // ]
 
+    function randomColor(){
+        return [Math.random(), Math.random(), Math.random()];
+    }
+
+    let colorsData = [];
+    for(let face = 0; face<6; face++){
+        let faceColor = randomColor();
+        for(let vertex=0; vertex<6; vertex++){
+            colorsData.push(...faceColor);
+        }
+    }
 
     const matrix = glMatrix.mat4.create();
-    glMatrix.mat4.translate(matrix, matrix, [-.5, .3, 0]);
-    //glMatrix.mat4.scale(matrix, matrix, [.5, .5, .5]);
+    //glMatrix.mat4.translate(matrix, matrix, [-.5, .3, 0]);
+    glMatrix.mat4.scale(matrix, matrix, [.5, .5, .5]);
 
     // create buffer
     // load vertexData into buffer
@@ -104,6 +165,7 @@ function main(){
 
     // use program
     gl.useProgram(program);
+    //gl.enable(gl.DEPTH_TEST);
 
     // enable uniforms
     // const u_PointSizeLoc = gl.getUniformLocation(program, `u_PointSize`);
@@ -116,10 +178,11 @@ function main(){
     // animation
     function animate(){
         requestAnimationFrame(animate);
-        glMatrix.mat4.rotateZ(matrix, matrix, Math.PI/2 / 70);
+        //glMatrix.mat4.rotateZ(matrix, matrix, Math.PI/2 / 70);
+        glMatrix.mat4.rotateX(matrix, matrix, Math.PI/2 / 70);
         gl.uniformMatrix4fv(u_MatrixLoc, false, matrix);
         // draw
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.drawArrays(gl.TRIANGLES, 0, positionData.length / 3);
 
     }
 
