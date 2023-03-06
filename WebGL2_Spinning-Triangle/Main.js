@@ -2,15 +2,16 @@
 
 const vertexShaderSource = `#version 300 es
 
-uniform float a_PointSize;
+//uniform float u_PointSize;
+uniform mat4 u_Matrix;
 in vec3 a_Position;
 in vec3 a_Color;
 
 out vec3 v_Color;
 
 void main(){
-    gl_PointSize = a_PointSize;
-    gl_Position = vec4(a_Position, 1.0);
+    //gl_PointSize = u_PointSize;
+    gl_Position = u_Matrix * vec4(a_Position, 1.0);
     v_Color = a_Color;
 }
 `;
@@ -40,9 +41,9 @@ function main(){
     // const pointSizeData = 110.0;
 
     const positionData = [
-        0, 1, 0,        //V1.position
-        -1, -1, 0,      //V2.position
-        1, -1, 0,       //V3.position
+        0, .3, 0,        //V1.position
+        -.3, -.3, 0,      //V2.position
+        .3, -.3, 0,       //V3.position
     ];
 
     const colorsData = [
@@ -50,6 +51,11 @@ function main(){
         Math.random(), Math.random(), Math.random(),       //V2.color
         Math.random(), Math.random(), Math.random(),        //V3.color
     ]
+
+
+    const matrix = glMatrix.mat4.create();
+    glMatrix.mat4.translate(matrix, matrix, [-.5, .3, 0]);
+    //glMatrix.mat4.scale(matrix, matrix, [.5, .5, .5]);
 
     // create buffer
     // load vertexData into buffer
@@ -86,7 +92,7 @@ function main(){
     // const a_PointSize = gl.getAttribLocation(program, `a_PointSize`);
     const a_PositionLoc = gl.getAttribLocation(program, `a_Position`);
     const a_ColorLoc = gl.getAttribLocation(program, `a_Color`);
-    console.log(a_PositionLoc, a_ColorLoc);
+    //console.log(a_PositionLoc, a_ColorLoc);
 
     gl.enableVertexAttribArray(a_PositionLoc);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -100,13 +106,24 @@ function main(){
     gl.useProgram(program);
 
     // enable uniforms
-    const a_PointSizeLoc = gl.getUniformLocation(program, `a_PointSize`);
-    console.log(a_PointSizeLoc);
-    gl.uniform1f(a_PointSizeLoc, 30);
+    // const u_PointSizeLoc = gl.getUniformLocation(program, `u_PointSize`);
+    // console.log(u_PointSizeLoc);
+    // gl.uniform1f(u_PointSizeLoc, 30);
 
-    // draw
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const u_MatrixLoc = gl.getUniformLocation(program, `u_Matrix`);
+    console.log(u_MatrixLoc);
 
+    // animation
+    function animate(){
+        requestAnimationFrame(animate);
+        glMatrix.mat4.rotateZ(matrix, matrix, Math.PI/2 / 70);
+        gl.uniformMatrix4fv(u_MatrixLoc, false, matrix);
+        // draw
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    }
+
+    animate();
 }
 
 main();
