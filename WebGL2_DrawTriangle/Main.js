@@ -1,89 +1,74 @@
-"use strict";
+const vertexShaderSource =`#version 300 es
 
-const vertexShaderSource = `#version 300 es
-
-in vec3 a_position;
+layout(location=0) in vec3 a_Position;
 
 void main(){
-    gl_Position = vec4(a_position, 1);
+    gl_Position = vec4(a_Position, 1);
 }
 `;
+
 const fragmentShaderSource = `#version 300 es
 precision mediump float;
-out vec4 outColor;
+
+out vec4 fragColor;
 
 void main(){
-    outColor = vec4(1, 0, 0.5, 1);
+    fragColor = vec4(0.5, 0, 0.5, 1.0);
 }
+
 `;
 
-function createShader(gl, type, shaderSource){
-    var shader = gl.createShader(type);
-    gl.shaderSource(shader, shaderSource);
-    gl.compileShader(shader);
+// get canvas
+const canvas = document.querySelector('canvas');
+const gl = canvas.getContext('webgl2');
 
-    // check success
-    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if(success){
-        return shader;
-    }
-
-    console.log(gl.getShaderInfoLog(shader));  // eslint-disable-line
-    gl.deleteShader(shader);
-    return undefined;
+if(!gl){
+    throw new Error('WebGL not supported');
 }
 
-function createProgram(gl, vertexShader, fragmentShader){
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
+// vertexData = [...]
+const vertexData = [
+    0, 1, 0,        //V1.position
+    -1, -1, 0,      //V2.position
+    1, -1, 0,       //V3.position
+];
 
-    var success = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if(success){
-        return program;
-    }
+// create Buffer
+const buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+// load Buffer
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW);
 
-    console.log(gl.getProgramInfoLog(program));
-    gl.deleteProgram(program);
-    return undefined;
+// create Vertex Shader
+const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertexShader, vertexShaderSource);
+gl.compileShader(vertexShader);
+
+// create Fragment Shader
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragmentShader, fragmentShaderSource);
+gl.compileShader(fragmentShader);
+
+// create Program
+const program = gl.createProgram();
+// attach shaders to program
+gl.attachShader(program, vertexShader);
+gl.attachShader(program, fragmentShader);
+gl.linkProgram(program);
+
+if(!gl.getProgramParameter(program, gl.LINK_STATUS)){
+    console.log(gl.getShaderInfoLog(vertexShader));
+    console.log(gl.getShaderInfoLog(fragmentShader));
 }
 
-function main(){
-    // get WebGL Context
-    const canvas = document.querySelector("#c");
-    const gl = canvas.getContext("webgl2");
-    if(!gl){
-        throw new Error('WebGL not supported');
-    }
+// enable vertex attributes
+const positionLoc = gl.getAttribLocation(program, `a_Position`);
+console.log(positionLoc);
+gl.enableVertexAttribArray(positionLoc);
+gl.vertexAttribPointer(positionLoc, 3, gl.FLOAT, false, 0, 0);
 
-//create vertex data
-    const positions = [
-        0, 1, 0,
-        -1, -1, 0,
-        1, -1, 0,
-    ]
-//create buffer on GPU
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-//load vertex data into buffer
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+gl.useProgram(program);
 
-//create vertex shader
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-//create fragment shader
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-// create program
-    const program = createProgram(gl, vertexShader, fragmentShader);
+// draw
+gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-//enable vertex attributes
-    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    gl.enableVertexAttribArray(positionAttributeLocation);
-    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
-
-//draw
-    gl.useProgram(program);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-}
-
-main();
