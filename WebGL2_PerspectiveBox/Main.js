@@ -2,7 +2,7 @@
 
 const vertexShaderSource = `#version 300 es
 
-uniform float u_PointSize;
+//uniform float u_PointSize;
 uniform mat4 u_Matrix;
 in vec3 a_Position;
 in vec3 a_Color;
@@ -10,9 +10,8 @@ in vec3 a_Color;
 out vec3 v_Color;
 
 void main(){
-    gl_PointSize = u_PointSize;
+    //gl_PointSize = u_PointSize;
     gl_Position = u_Matrix * vec4(a_Position, 1.0);
-    //v_Color = vec3(a_Position.x * 1.5, 0.12, a_Position.y * 1.99);
     v_Color = a_Color;
 }
 `;
@@ -38,6 +37,14 @@ function main(){
     }
 
     // vertexData
+
+    // const pointSizeData = 110.0;
+
+    // const positionData = [
+    //     0, .3, 0,        //V1.position
+    //     -.3, -.3, 0,      //V2.position
+    //     .3, -.3, 0,       //V3.position
+    // ];
 
     const positionData = [
         // Front
@@ -89,60 +96,43 @@ function main(){
         -.5, -.5, -.5,
     ];
 
+    // const colorsData = [
+    //     Math.random(), Math.random(), Math.random(),        //V1.color
+    //     Math.random(), Math.random(), Math.random(),       //V2.color
+    //     Math.random(), Math.random(), Math.random(),        //V3.color
+    // ]
 
     function randomColor(){
-        return [Math.random() * Math.random()  * Math.random() - 0.1, Math.random() * Math.random() - 0.15, Math.random()];
+        return [Math.random(), Math.random(), Math.random()];
     }
 
-    //let colorsData = [];
-    // for(let face = 0; face<6; face++){
-    //     let faceColor = randomColor();
-    //     for(let vertex=0; vertex<6; vertex++){
-    //         colorsData.push(...faceColor);
-    //     }
-    // }
-
+    let colorsData = [];
+    for(let face = 0; face<6; face++){
+        let faceColor = randomColor();
+        for(let vertex=0; vertex<6; vertex++){
+            colorsData.push(...faceColor);
+        }
+    }
 
     const matrix = glMatrix.mat4.create();
-    //glMatrix.mat4.translate(matrix, matrix, [-.5, .3, 0]);
-    glMatrix.mat4.scale(matrix, matrix, [.5, .5, .5]);
+    glMatrix.mat4.translate(matrix, matrix, [.0, .0, -.05]);
+    glMatrix.mat4.scale(matrix, matrix, [.05, .05, .05]);
 
-    function spherePointCloud(pointCount){
-        let points = [];
-        for(let i=0; i<pointCount; i++){
-            const r = () => Math.random() - .5;
-            const inputPoint = [r(), r(), r()];
+    const projectionMatrix = glMatrix.mat4.create();
+    glMatrix.mat4.perspective(projectionMatrix,
+        120 * Math.PI/180, // vertical field of view
+        canvas.width / canvas.height, // aspect W/H
+        1e-2, // near cull distance
+        1e4,
+    );
 
-            const outputPoint = glMatrix.vec3.normalize(glMatrix.vec3.create(), inputPoint);
-
-            points.push(...outputPoint);
-        }
-
-        return points;
-    }
-
-    function sphereColor(pointCount){
-        let colors = [];
-        for(let i=0; i<pointCount; i++){
-
-            const inputColor = randomColor();
-            const outputColor = glMatrix.vec3.normalize(glMatrix.vec3.create(), inputColor);
-            colors.push(...outputColor);
-        }
-
-        return colors;
-    }
-
-    const pointCount = 1e5
-    const vertexData = spherePointCloud(pointCount);
-    const colorsData = sphereColor(pointCount);
+    const finalMatrix = glMatrix.mat4.create();
 
     // create buffer
     // load vertexData into buffer
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.STATIC_DRAW);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionData), gl.STATIC_DRAW);
 
     const colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
@@ -170,10 +160,10 @@ function main(){
     }
 
     // enable vertex attributes
-    const a_PointSize = gl.getAttribLocation(program, `a_PointSize`);
+    // const a_PointSize = gl.getAttribLocation(program, `a_PointSize`);
     const a_PositionLoc = gl.getAttribLocation(program, `a_Position`);
     const a_ColorLoc = gl.getAttribLocation(program, `a_Color`);
-    console.log(a_PositionLoc, a_ColorLoc);
+    //console.log(a_PositionLoc, a_ColorLoc);
 
     gl.enableVertexAttribArray(a_PositionLoc);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -185,46 +175,27 @@ function main(){
 
     // use program
     gl.useProgram(program);
-    gl.enable(gl.DEPTH_TEST);
+    //gl.enable(gl.DEPTH_TEST);
 
     // enable uniforms
-    const u_PointSizeLoc = gl.getUniformLocation(program, `u_PointSize`);
-    console.log(u_PointSizeLoc);
-    gl.uniform1f(u_PointSizeLoc, 0.5);
+    // const u_PointSizeLoc = gl.getUniformLocation(program, `u_PointSize`);
+    // console.log(u_PointSizeLoc);
+    // gl.uniform1f(u_PointSizeLoc, 30);
 
     const u_MatrixLoc = gl.getUniformLocation(program, `u_Matrix`);
     console.log(u_MatrixLoc);
 
-    const modelMatrix = glMatrix.mat4.create();
-    const viewMatrix = glMatrix.mat4.create();
-    const projectionMatrix = glMatrix.mat4.create();
-
-    glMatrix.mat4.perspective(projectionMatrix,
-        75 * Math.PI/180,
-        canvas.width / canvas.height,
-        1e-4,
-        1e4,
-    )
-
-    const mvMatrix = glMatrix.mat4.create();
-    const mvpMatrix = glMatrix.mat4.create();
-
-    glMatrix.mat4.translate(modelMatrix, modelMatrix, [0, 0, 0]);
-
-    glMatrix.mat4.translate(viewMatrix, viewMatrix, [0, 0.1, 2]);
-    glMatrix.mat4.invert(viewMatrix, viewMatrix);
-
     // animation
     function animate(){
         requestAnimationFrame(animate);
-        //glMatrix.mat4.rotateZ(matrix, matrix, Math.PI/2 / 70);
-        glMatrix.mat4.rotateY(modelMatrix, modelMatrix, 0.003);
-        glMatrix.mat4.multiply(mvMatrix, viewMatrix, modelMatrix);
-        glMatrix.mat4.multiply(mvpMatrix, projectionMatrix, mvMatrix);
-        gl.uniformMatrix4fv(u_MatrixLoc, false, mvpMatrix);
+        //glMatrix.mat4.rotateZ(matrix, matrix, Math.PI / 180);
+        glMatrix.mat4.rotateX(matrix, matrix, Math.PI / 360);
+
+        glMatrix.mat4.multiply(finalMatrix, projectionMatrix, matrix);
+        gl.uniformMatrix4fv(u_MatrixLoc, false, finalMatrix);
         // draw
-        //gl.drawArrays(gl.TRIANGLES, 0, positionData.length / 3);
-        gl.drawArrays(gl.POINTS, 0, vertexData.length / 3);
+        gl.drawArrays(gl.TRIANGLES, 0, positionData.length / 3);
+
     }
 
     animate();
