@@ -91,7 +91,7 @@ function main(){
 
 
     function randomColor(){
-        return [Math.random() * Math.random()  * Math.random() - 0.1, Math.random() * Math.random() - 0.15, Math.random()];
+        return [Math.random() * Math.random()  * Math.random(), Math.random() * Math.random() - 0.8, Math.random() - 0.3];
     }
 
     //let colorsData = [];
@@ -133,7 +133,7 @@ function main(){
         return colors;
     }
 
-    const pointCount = 1e5
+    const pointCount = 1e5 * 0.7
     const vertexData = spherePointCloud(pointCount);
     const colorsData = sphereColor(pointCount);
 
